@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.14-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git curl ca-certificates ripgrep ffmpeg \
@@ -9,18 +9,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:$PATH"
 
-RUN git clone --recurse-submodules https://github.com/NousResearch/hermes-agent.git /opt/hermes-agent
+RUN git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/NousResearch/hermes-agent.git /opt/hermes-agent
 
 WORKDIR /opt/hermes-agent
-RUN uv venv venv --python 3.11 \
-    && VIRTUAL_ENV=/opt/hermes-agent/venv uv pip install -e ".[all]" \
-    && VIRTUAL_ENV=/opt/hermes-agent/venv uv pip install ruamel.yaml python-dotenv rich
+RUN uv venv venv --python 3.14 \
+    && VIRTUAL_ENV=/opt/hermes-agent/venv uv pip install --no-cache -e ".[all]" \
+    && VIRTUAL_ENV=/opt/hermes-agent/venv python -c "import httpx, dotenv, rich; print('Hermes runtime dependencies OK')"
 
 ENV PATH="/opt/hermes-agent/venv/bin:$PATH"
 
 RUN mkdir -p /root/.hermes/{cron,sessions,logs,memories,skills,pairing,hooks,image_cache,audio_cache} \
     && cp cli-config.yaml.example /root/.hermes/config.yaml \
-    && touch /root/.hermes/.env
+    && touch /root/.hermes/.env \
+    && rm -rf /root/.cache /tmp/*
 
 COPY auth_proxy.py /auth_proxy.py
 COPY entrypoint.sh /entrypoint.sh
