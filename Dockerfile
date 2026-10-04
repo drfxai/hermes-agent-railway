@@ -14,7 +14,7 @@ RUN git clone --recurse-submodules https://github.com/NousResearch/hermes-agent.
 WORKDIR /opt/hermes-agent
 RUN uv venv venv --python 3.11 \
     && VIRTUAL_ENV=/opt/hermes-agent/venv uv pip install -e ".[all]" \
-    && VIRTUAL_ENV=/opt/hermes-agent/venv uv pip install ruamel.yaml python-dotenv
+    && VIRTUAL_ENV=/opt/hermes-agent/venv uv pip install ruamel.yaml python-dotenv rich
 
 ENV PATH="/opt/hermes-agent/venv/bin:$PATH"
 
