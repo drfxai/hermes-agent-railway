@@ -367,7 +367,24 @@ gwStatus();setInterval(gwStatus,10000);
 
 
 async def health(request):
-    return web.json_response({"status": "ok"})
+    gateway_running = gateway_process is not None and gateway_process.poll() is None
+    dashboard_running = False
+    try:
+        timeout = __import__("aiohttp").ClientTimeout(total=2)
+        async with ClientSession(timeout=timeout) as session:
+            async with session.get(f"{UPSTREAM}/api/health") as resp:
+                dashboard_running = resp.status < 500
+    except Exception:
+        dashboard_running = False
+
+    healthy = gateway_running and dashboard_running
+    payload = {
+        "status": "ok" if healthy else "unhealthy",
+        "gateway": gateway_running,
+        "dashboard": dashboard_running,
+        "volume": volume_attached(),
+    }
+    return web.json_response(payload, status=200 if healthy else 503)
 
 
 async def proxy_ws(request):
