@@ -1,0 +1,6 @@
+FROM nousresearch/hermes-agent:latest
+USER root
+# Railway overrides Docker image CMD as an exec-form command. This wrapper keeps
+# Hermes' own dispatcher as the executable so "gateway run" remains arguments.
+ENTRYPOINT ["/opt/hermes/docker/entrypoint-dispatch.sh"]
+CMD ["gateway","run"]
